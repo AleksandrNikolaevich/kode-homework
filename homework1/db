@@ -1,0 +1,44 @@
+Table users {
+  id string [primary key]
+  username string
+  birthday timestamp
+  role_id string
+  parent_id string
+  status enum
+  created_at timestamp
+}
+
+Table roles {
+  id string [primary key]
+  name stirng
+}
+
+Table transactions {
+  id string [primary key]
+  user_id string
+  creator_id string
+  service_id stirng
+  status enum
+  created_at timestamp
+}
+
+Table services {
+  id string [primary key]
+  description string
+  amount number
+  service_type_id string
+  is_active boolean
+  created_at timestamp
+}
+
+Table service_types {
+  id string [primary key]
+  description string
+}
+
+Ref: users.parent_id > users.id
+Ref: users.role_id > roles.id
+Ref: transactions.user_id > users.id
+Ref: transactions.creator_id > users.id
+Ref: services.id < transactions.service_id
+Ref: service_types.id < services.service_type_id
