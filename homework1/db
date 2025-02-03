@@ -1,44 +1,120 @@
+// Таблица с пользователями системы
 Table users {
-  id string [primary key]
+  id UUID [primary key]
+  parent_id UUID [ref: > users.id]
+  role_id UUID [not null, ref: > roles.id]
   username string
   birthday timestamp
-  role_id string
-  parent_id string
-  status enum
+  // поле показывает статус пользователя, например аккаунт удален
+  status ENUM('active', 'inactive', 'deleted')
+  updated_at timestamp
   created_at timestamp
 }
 
+// Таблица ролей (админ/менеджер/клиент/сервисная роль)
 Table roles {
-  id string [primary key]
+  id UUID [primary key]
   name stirng
+  description string
 }
 
+// связь роли с возможностями
+Table roles_permissions {
+  id UUID [primary key]
+  role_id UUID [not null, ref: > roles.id]
+  permission_id UUID [not null, ref: > permissions.id]
+}
+
+// Доступные возможности
+Table permissions {
+  id UUID [primary key]
+  description string
+}
+
+// Счета пользователей
+Table accounts {
+  id UUID [primary key]
+  owner_id UUID [not null, ref: > users.id]
+  name string
+  // баанс счета
+  balance number
+  update_at timestamp
+  create_at timestamp
+}
+
+// транзакции
 Table transactions {
-  id string [primary key]
-  user_id string
-  creator_id string
-  service_id stirng
-  status enum
+  id UUID [primary key]
+  account_id UUID [not null, ref: > accounts.id]
+  // кто инициатор транзакции
+  creator_id UUID [not null, ref: > employees.id]
+  // услуга, null в случае пополения/снятия роботом
+  business_services_id UUID [null, ref: > business_services.id]
+  // кол-во баллов
+  amount number
+  // причина, если не указана услуга
+  reason string
+  // снятие/пополнение
+  type enum(refill, removal)
   created_at timestamp
 }
 
-Table services {
-  id string [primary key]
-  description string
-  amount number
-  service_type_id string
+// связь между услугой и бизнесом
+Table business_services {
+  id UUID [primary key]
+  service_id UUID [not null, ref: > services.id]
+  business_id UUID [not null, ref: > business_points.id]
+  cost number // стоимость услуги
+  reward_amount_persent number // процент баллами 
   is_active boolean
   created_at timestamp
 }
 
+// услуги (активности/товары)
+Table services {
+  id UUID [primary key]
+  name string // имя услуги
+  description string // описание услуги
+  base_cost number // базовая стоимость услуги, может быть переопределена на уровне бизнеса
+  base_reward_amount_percent number // базоый процент баллами, может быть переопределен на уровне бизнеса
+  service_type_id UUID [not null, ref: > service_types.id]
+}
+
+// тип услуги (активность/товар)
 Table service_types {
-  id string [primary key]
+  id UUID [primary key]
   description string
 }
 
-Ref: users.parent_id > users.id
-Ref: users.role_id > roles.id
-Ref: transactions.user_id > users.id
-Ref: transactions.creator_id > users.id
-Ref: services.id < transactions.service_id
-Ref: service_types.id < services.service_type_id
+// бизнес-точки
+Table business_points {
+  id UUID [primary key]
+  partner_id UUID [not null, ref: > business_partners.id]
+  name string
+  address string
+}
+
+// партнеры
+Table business_partners {
+  id UUID [primary key]
+  name stirng
+  contacts string
+}
+
+// сотрудники
+Table employees {
+  id UUID [primary key]
+  user_id UUID [not null, ref: > users.id]
+  business_id UUID [not null, ref: > business_points.id]
+  created_at timestamp
+}
+
+// устройства пользоватлей
+Table devices {
+  id UUID [primary key]
+  user_id UUID [ref: > users.id]
+  push_token string
+  OS enum(ios, android)
+  updated_at timestamp
+  created_at timestamp
+}
