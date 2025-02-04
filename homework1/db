@@ -48,8 +48,6 @@ Table transactions {
   account_id UUID [not null, ref: > accounts.id]
   // кто инициатор транзакции
   creator_id UUID [not null, ref: > employees.id]
-  // услуга, null в случае пополения/снятия роботом
-  business_services_id UUID [null, ref: > business_services.id]
   // кол-во баллов
   amount number
   // причина, если не указана услуга
@@ -57,6 +55,12 @@ Table transactions {
   // снятие/пополнение
   type enum(refill, removal)
   created_at timestamp
+}
+
+Table transaction_services {
+  id UUID [primary key]
+  transaction_id UUID [not null, ref: > transactions.id]
+  business_services_id UUID [not null, ref: > business_services.id]
 }
 
 // связь между услугой и бизнесом
